@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 
 namespace KoaSaveEditor
 {
@@ -17,7 +18,18 @@ namespace KoaSaveEditor
         /// <param name="s"></param>
         void LogLine(string s);
 
+        /// <summary>
+        /// Logs an exception, with an optional context message
+        /// </summary>
+        /// <param name="ex"></param>
+        /// <param name="context"></param>
         void LogException(Exception ex, string context = "");
+
+        /// <summary>
+        /// Returns the main form. Useful for *Invoke*() calls.
+        /// </summary>
+        /// <returns></returns>
+        Form GetMainForm();
 
     }
 }
