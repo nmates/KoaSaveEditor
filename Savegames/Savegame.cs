@@ -83,12 +83,24 @@ namespace KoaSaveEditor.Savegames
         /// <summary>
         /// Initial bytes that must be present.
         /// </summary>
-        private static readonly byte[] s_RequiredHeaderBytes = { 0xc4, 0xdb, 0xd8, 0x00 }; 
+        private static readonly byte[] s_RequiredHeaderBytes = { 0xc4, 0xdb, 0xd8, 0x00 };
 
         /// <summary>
-        /// Initial offset at offset 0x04 in m_Bytes. Purpose not yet known.
+        /// Initial offset seen in header's m_Bytes[0x04]. Purpose not yet known.
         /// </summary>
         private int m_InitialOffset;
+
+        // Offset in m_Bytes to the byte just after the Player* strings.
+        private int m_PostPlayerStringOffset;
+
+        /// <summary>
+        /// Player level. Seems to be a byte, only.
+        /// </summary>
+        private int m_PlayerLevelByte;
+
+        // The 48 bytes after m_PlayerLevelByte seem to not follow the pattern of the subsequent section.
+        // These 48 bytes don't seem to be all 24-bit values like the subsequent section.
+        private int[] m_PostPlayerBlock = new int[(16 / SIZEOF_INT32) * 3]; 
 
         internal Savegame(IMainFormAPI appAPI, string filename)
         {
@@ -141,7 +153,7 @@ namespace KoaSaveEditor.Savegames
 
                 // Not sure what this byte is, seems to be always 0. 
                 int unknownByte = Read8Bits(ref offset);
-                ValidateByte(unknownByte, 0, offset);
+                RequireByte(unknownByte, 0, offset);
 
                 ReadTimePlayed(ref offset);
                 PlayerName = ReadPString32(ref offset);
@@ -149,6 +161,20 @@ namespace KoaSaveEditor.Savegames
                 PlayerClass = ReadPString32(ref offset);
                 PlayerQuest = ReadPString32(ref offset);
                 PlayerSpecialization = ReadPString32(ref offset);
+
+                // Store for later...
+                m_PostPlayerStringOffset = offset;
+                m_PlayerLevelByte = Read8Bits(ref offset);
+              
+                // And then the 48 bytes after that that seem unlike the following section
+                for(int i=0; i< m_PostPlayerBlock.Length;++i)
+                {
+                    m_PostPlayerBlock[i] = Read32Bits(ref offset);
+                }
+
+                // 
+
+
             }
             catch (Exception ex)
             {
@@ -244,7 +270,7 @@ namespace KoaSaveEditor.Savegames
             for(int i=0;i<stringLen;++i)
             {
                 int tempInt = Read8Bits(ref offset);
-                char tempChar = (char)(tempInt & 0xFF);
+                char tempChar = (char)(tempInt); // Masking of (& 0xFF) done by Read8Bits
                 retString += tempChar;
             }
             return retString;
@@ -259,13 +285,27 @@ namespace KoaSaveEditor.Savegames
         /// <param name="unknownByte"></param>
         /// <param name="v"></param>
         /// <param name="offset"></param>
-        private void ValidateByte(int value, int expectedValue, int offset)
+        private void RequireByte(int value, int expectedValue, int offset)
         {
             Debug.Assert(value == 0);
             if (value != expectedValue)
             {
                 m_AppAPI.LogLine(string.Format("Invalid byte {0} != expected byte {1} at offset {2}", value, expectedValue, offset - SIZEOF_BYTE));
                 throw new InvalidDataException();
+            }
+        }
+
+        /// <summary>
+        /// Like RequireByte, but warns if the specified byte is not the expected value
+        /// </summary>
+        /// <param name="value"></param>
+        /// <param name="expectedValue"></param>
+        /// <param name="offset"></param>
+        private void WarnIfByteIsNot(int value, int expectedValue, int offset)
+        {
+            if (value != expectedValue)
+            {
+                m_AppAPI.LogLine(string.Format("Warning byte {0} != expected byte {1} at offset {2}. Filename '{3}'", value, expectedValue, offset - SIZEOF_BYTE, m_Filename));
             }
         }
 
@@ -277,7 +317,7 @@ namespace KoaSaveEditor.Savegames
         /// <param name="unknownByte"></param>
         /// <param name="v"></param>
         /// <param name="offset"></param>
-        private void ValidateInt(int value, int expectedValue, int offset)
+        private void RequireInt(int value, int expectedValue, int offset)
         {
             Debug.Assert(value == 0);
             if (value != expectedValue)

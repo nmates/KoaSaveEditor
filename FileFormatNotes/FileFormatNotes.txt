@@ -20,3 +20,22 @@ time played in ms. Need a savegame past 38 days to determine
 Offset 0x11 start of game header info. These are 'Pascal' strings
 (prefixed by length, 32 bit), not 0-terminated 'C' strings. Can't tell
 if this is UTF-7/UTF-8/etc, but in English, these appear as ascii.
+
+Immediately after the 5th string ("Int_Generic" for my saves), there's a
+byte that is the player level.
+
+Immediately after the player level byte, looks like 48 bytes of something
+
+                            54 2f  e0 5e 00 00 00 00 08 00  |      T/.^......|
+00000060  00 00 01 00 00 00 02 00  00 00 06 00 00 00 07 00  |................|
+00000070  00 00 08 00 00 00 09 00  00 00 03 00 00 00 04 00  |................|
+00000080  00 00 65 fe 16 00
+This block appears to be 48 bytes long based on the lack of 0x00 bytes in the
+next section.
+
+From roughly 0xA0 .. 0x12A0, somewhat constant entries. Seems to be a
+lot of 32-bit values, but only 24 bits are actually used -- with 0x00
+appearing in row [2] [6] [A] [E] positions
+
+About 0x12C0 in, gets to a semi-repeating pattern with the 6-byte pattern
+'f2 44 00 04 00 00' appearing every 12 bytes.
