@@ -29,8 +29,6 @@
         private void InitializeComponent()
         {
             this.welcomeLabel = new System.Windows.Forms.Label();
-            this.savegameCombobox = new System.Windows.Forms.ComboBox();
-            this.saveNameLabel = new System.Windows.Forms.Label();
             this.scanForSavesButton = new System.Windows.Forms.Button();
             this.loadSavegameButton = new System.Windows.Forms.Button();
             this.mainTabHolder = new System.Windows.Forms.TabControl();
@@ -38,6 +36,14 @@
             this.prefsTab = new System.Windows.Forms.TabPage();
             this.outputPane = new System.Windows.Forms.TextBox();
             this.mainSplitContainer = new System.Windows.Forms.SplitContainer();
+            this.savegameListView = new System.Windows.Forms.ListView();
+            this.filenameColumnHeader = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.elapsedTimeHeader = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.charNameHeader = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.locationHeader = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.classHeader = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.questHeader = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.saveTimeHeader = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.mainTabHolder.SuspendLayout();
             this.pickSaveTab.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.mainSplitContainer)).BeginInit();
@@ -48,34 +54,17 @@
             // 
             // welcomeLabel
             // 
+            this.welcomeLabel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.welcomeLabel.AutoSize = true;
-            this.welcomeLabel.Location = new System.Drawing.Point(6, 3);
+            this.welcomeLabel.Location = new System.Drawing.Point(3, 258);
             this.welcomeLabel.Name = "welcomeLabel";
             this.welcomeLabel.Size = new System.Drawing.Size(236, 13);
             this.welcomeLabel.TabIndex = 0;
             this.welcomeLabel.Text = "Welcome to KOA Save Editor. It will get better....";
             // 
-            // savegameCombobox
-            // 
-            this.savegameCombobox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.savegameCombobox.FormattingEnabled = true;
-            this.savegameCombobox.Location = new System.Drawing.Point(85, 44);
-            this.savegameCombobox.Name = "savegameCombobox";
-            this.savegameCombobox.Size = new System.Drawing.Size(198, 21);
-            this.savegameCombobox.TabIndex = 1;
-            // 
-            // saveNameLabel
-            // 
-            this.saveNameLabel.AutoSize = true;
-            this.saveNameLabel.Location = new System.Drawing.Point(6, 47);
-            this.saveNameLabel.Name = "saveNameLabel";
-            this.saveNameLabel.Size = new System.Drawing.Size(61, 13);
-            this.saveNameLabel.TabIndex = 2;
-            this.saveNameLabel.Text = "Savegame:";
-            // 
             // scanForSavesButton
             // 
-            this.scanForSavesButton.Location = new System.Drawing.Point(307, 42);
+            this.scanForSavesButton.Location = new System.Drawing.Point(9, 6);
             this.scanForSavesButton.Name = "scanForSavesButton";
             this.scanForSavesButton.Size = new System.Drawing.Size(99, 23);
             this.scanForSavesButton.TabIndex = 3;
@@ -85,7 +74,7 @@
             // 
             // loadSavegameButton
             // 
-            this.loadSavegameButton.Location = new System.Drawing.Point(85, 72);
+            this.loadSavegameButton.Location = new System.Drawing.Point(265, 6);
             this.loadSavegameButton.Name = "loadSavegameButton";
             this.loadSavegameButton.Size = new System.Drawing.Size(75, 23);
             this.loadSavegameButton.TabIndex = 4;
@@ -106,11 +95,10 @@
             // 
             // pickSaveTab
             // 
+            this.pickSaveTab.Controls.Add(this.savegameListView);
             this.pickSaveTab.Controls.Add(this.welcomeLabel);
             this.pickSaveTab.Controls.Add(this.loadSavegameButton);
-            this.pickSaveTab.Controls.Add(this.savegameCombobox);
             this.pickSaveTab.Controls.Add(this.scanForSavesButton);
-            this.pickSaveTab.Controls.Add(this.saveNameLabel);
             this.pickSaveTab.Location = new System.Drawing.Point(4, 22);
             this.pickSaveTab.Name = "pickSaveTab";
             this.pickSaveTab.Padding = new System.Windows.Forms.Padding(3);
@@ -159,6 +147,55 @@
             this.mainSplitContainer.SplitterDistance = 300;
             this.mainSplitContainer.TabIndex = 7;
             // 
+            // savegameListView
+            // 
+            this.savegameListView.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.savegameListView.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
+            this.filenameColumnHeader,
+            this.saveTimeHeader,
+            this.elapsedTimeHeader,
+            this.charNameHeader,
+            this.locationHeader,
+            this.classHeader,
+            this.questHeader});
+            this.savegameListView.HideSelection = false;
+            this.savegameListView.Location = new System.Drawing.Point(6, 35);
+            this.savegameListView.Name = "savegameListView";
+            this.savegameListView.Size = new System.Drawing.Size(778, 202);
+            this.savegameListView.TabIndex = 5;
+            this.savegameListView.UseCompatibleStateImageBehavior = false;
+            this.savegameListView.View = System.Windows.Forms.View.Details;
+            // 
+            // filenameColumnHeader
+            // 
+            this.filenameColumnHeader.Text = "Filename";
+            // 
+            // elapsedTimeHeader
+            // 
+            this.elapsedTimeHeader.Text = "Time played";
+            // 
+            // charNameHeader
+            // 
+            this.charNameHeader.Text = "Character";
+            // 
+            // locationHeader
+            // 
+            this.locationHeader.Text = "Location";
+            // 
+            // classHeader
+            // 
+            this.classHeader.Text = "Class";
+            // 
+            // questHeader
+            // 
+            this.questHeader.Text = "Quest";
+            // 
+            // saveTimeHeader
+            // 
+            this.saveTimeHeader.Text = "Saved at";
+            // 
             // Mainform
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -182,8 +219,6 @@
         #endregion
 
         private System.Windows.Forms.Label welcomeLabel;
-        private System.Windows.Forms.ComboBox savegameCombobox;
-        private System.Windows.Forms.Label saveNameLabel;
         private System.Windows.Forms.Button scanForSavesButton;
         private System.Windows.Forms.Button loadSavegameButton;
         private System.Windows.Forms.TabControl mainTabHolder;
@@ -191,6 +226,14 @@
         private System.Windows.Forms.TabPage prefsTab;
         private System.Windows.Forms.TextBox outputPane;
         private System.Windows.Forms.SplitContainer mainSplitContainer;
+        private System.Windows.Forms.ListView savegameListView;
+        private System.Windows.Forms.ColumnHeader filenameColumnHeader;
+        private System.Windows.Forms.ColumnHeader saveTimeHeader;
+        private System.Windows.Forms.ColumnHeader elapsedTimeHeader;
+        private System.Windows.Forms.ColumnHeader charNameHeader;
+        private System.Windows.Forms.ColumnHeader locationHeader;
+        private System.Windows.Forms.ColumnHeader classHeader;
+        private System.Windows.Forms.ColumnHeader questHeader;
     }
 }
 

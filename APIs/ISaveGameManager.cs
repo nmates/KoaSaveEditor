@@ -23,9 +23,10 @@ namespace KoaSaveEditor
         /// <returns></returns>
         int GetNumSaves();
 
-        void AddSavesToUI(System.Windows.Forms.ComboBox baseUI);
-
-        ISavegame TryLoadSave(object tag);
-
+        /// <summary>
+        /// Iterator for savegames. Useful for UI, etc.
+        /// </summary>
+        /// <returns></returns>
+        IEnumerable<ISavegame> GetSaves();
     }
 }

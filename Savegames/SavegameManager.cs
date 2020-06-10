@@ -13,7 +13,7 @@ namespace KoaSaveEditor.Savegames
     /// </summary>
     internal class SavegameManager : ISaveGameManager
     {
-      
+
         /// <summary>
         /// If files are under here, will be in format C:\Program Files (x86)\Steam\userdata\{STEAM_USERID}\102500\remote
         /// 102500 is the steam app ID for KOA:Reckoning, can see that at https://steamspy.com/app/102500
@@ -25,7 +25,7 @@ namespace KoaSaveEditor.Savegames
         // Scan under there too, ideally after getting full confirmation of save dir.
 
         private readonly IMainFormAPI m_AppAPI;
-        private IList<string> m_SavFilenames = new List<string>();
+        private IList<ISavegame> m_Savegames = new List<ISavegame>();
 
         internal SavegameManager(IMainFormAPI appAPI)
         {
@@ -41,7 +41,7 @@ namespace KoaSaveEditor.Savegames
         public bool ScanForSaves()
         {
             bool bSuccess = false;
-            m_SavFilenames.Clear();
+            m_Savegames.Clear();
             try
             {
                 bSuccess = LoadSteamSaves();
@@ -50,7 +50,7 @@ namespace KoaSaveEditor.Savegames
             {
                 m_AppAPI.LogException(ex, "ScanForSaves");
             }
-            return bSuccess;            
+            return bSuccess;
         }
 
         /// <summary>
@@ -59,7 +59,7 @@ namespace KoaSaveEditor.Savegames
         /// <returns></returns>
         public int GetNumSaves()
         {
-            return m_SavFilenames.Count;
+            return m_Savegames.Count;
         }
 
         /// <summary>
@@ -69,17 +69,17 @@ namespace KoaSaveEditor.Savegames
         private bool LoadSteamSaves()
         {
             bool ret = false;
-            if(!Directory.Exists(STEAM_BASE_SAVEGAME_FOLDER))
+            if (!Directory.Exists(STEAM_BASE_SAVEGAME_FOLDER))
             {
                 return ret;
             }
 
             // Need to see if STEAM_BASE_SAVEGAME_FOLDER\*\STEAM_SUFFIX_FOLDER exists.
             string[] subDirs = Directory.GetDirectories(STEAM_BASE_SAVEGAME_FOLDER);
-            foreach(string subdir in subDirs)
+            foreach (string subdir in subDirs)
             {
                 string fullPath = Path.Combine(subdir, STEAM_SUFFIX_FOLDER);
-                if(Directory.Exists(fullPath))
+                if (Directory.Exists(fullPath))
                 {
                     ret = LoadSavesFromFolder(fullPath);
                 }
@@ -96,33 +96,32 @@ namespace KoaSaveEditor.Savegames
         private bool LoadSavesFromFolder(string fullPath)
         {
             bool ret = false;
-            if(!Directory.Exists(fullPath))
+            if (!Directory.Exists(fullPath))
             {
                 return ret;
             }
-            
+
             string[] savFiles = Directory.GetFiles(fullPath, "*.sav");
-            m_SavFilenames = savFiles.ToList();
+            foreach (string filename in savFiles)
+            {
+                Savegame tempSave = new Savegame(m_AppAPI, filename);
+                if (tempSave.TryLoad())
+                {
+                    m_Savegames.Add(tempSave);
+                }
+            }
 
             return ret;
         }
 
-        public void AddSavesToUI(System.Windows.Forms.ComboBox baseUI)
-        {
-            baseUI.Items.Clear();
-            foreach(string path in m_SavFilenames)
-            {
-                baseUI.Items.Add(path);
-            }
-            if(baseUI.Items.Count > 0)
-            {
-                baseUI.SelectedIndex = 0;
-            }
-        }
 
-        public ISavegame TryLoadSave(object tag)
+        /// <summary>
+        /// Iterator for savegames. Useful for UI, etc.
+        /// </summary>
+        /// <returns></returns>
+        public IEnumerable<ISavegame> GetSaves()
         {
-            return null;
+            return m_Savegames; //.GetEnumerator();
         }
 
     }
