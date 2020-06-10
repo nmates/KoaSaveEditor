@@ -2,11 +2,11 @@
 Savegames seem to start with the following 4 bytes
 00000000  c4 db d8 00
 
-At offset +0x04, there's some internal offset that seems 32-bit based
-e.g. 0a 85 00 00
+At offset +0x04, there's a byte (version?) that seems to always be
+0x0A
 
-At offset +0x08, there's a byte that seems to always be 00
-- Not sure if previous offset is really 5 bytes long. 
+At offset +0x05 (thru 0x08, 32 bit), some internal offset that seem to
+be an offset past the variable-length header section
 
 At offset +0x9 .. 0x10 (64 bits), looks like a timestamp (seems 64 bit)
 Pre : 0x016adebd (== 23781053)

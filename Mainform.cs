@@ -59,6 +59,8 @@ namespace KoaSaveEditor
                     lvItem.SubItems.Add(saveEnumerator.Current.PlayerLocation);
                     lvItem.SubItems.Add(saveEnumerator.Current.PlayerClass);
                     lvItem.SubItems.Add(saveEnumerator.Current.PlayerQuest);
+                    lvItem.SubItems.Add(saveEnumerator.Current.PlayerLevel.ToString());
+                    lvItem.SubItems.Add(saveEnumerator.Current.DebugText);
                     savegameListView.Items.Add(lvItem);
                 }
             }

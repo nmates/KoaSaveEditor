@@ -24,6 +24,11 @@ namespace KoaSaveEditor
         string PlayerName { get; }
 
         /// <summary>
+        /// Player level
+        /// </summary>
+        int PlayerLevel { get; }
+
+        /// <summary>
         /// Player location from the header
         /// </summary>
         string PlayerLocation { get; }
@@ -47,6 +52,11 @@ namespace KoaSaveEditor
         /// Disk filename. 
         /// </summary>
         string FullLocalPath { get; }
+
+        /// <summary>
+        /// Debug text for analysis
+        /// </summary>
+        string DebugText { get; }
 
     }
 }

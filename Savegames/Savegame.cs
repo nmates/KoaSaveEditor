@@ -55,6 +55,11 @@ namespace KoaSaveEditor.Savegames
         public string PlayerName { get; private set; } = string.Empty;
 
         /// <summary>
+        /// Player level
+        /// </summary>
+        public int PlayerLevel { get { return m_PlayerLevelByte; } }
+
+        /// <summary>
         /// Player location from the header
         /// </summary>
         public string PlayerLocation { get; private set; } = string.Empty;
@@ -79,11 +84,20 @@ namespace KoaSaveEditor.Savegames
         /// </summary>
         public string FullLocalPath { get { return m_Filename; } }
 
+        /// <summary>
+        /// Debug text for analysis
+        /// </summary>
+        public string DebugText { get; private set; } = string.Empty;
 
         /// <summary>
         /// Initial bytes that must be present.
         /// </summary>
         private static readonly byte[] s_RequiredHeaderBytes = { 0xc4, 0xdb, 0xd8, 0x00 };
+
+        /// <summary>
+        /// This pattern seems to repeat 6 out of every 12 bytes into the file. Purpose/use: unsure.
+        /// </summary>
+        private static readonly byte[] s_RepeatingPatternBytes = { 0xf2, 0x44, 0x00, 0x04, 0x00, 0x00 };
 
         /// <summary>
         /// Initial offset seen in header's m_Bytes[0x04]. Purpose not yet known.
@@ -100,7 +114,7 @@ namespace KoaSaveEditor.Savegames
 
         // The 48 bytes after m_PlayerLevelByte seem to not follow the pattern of the subsequent section.
         // These 48 bytes don't seem to be all 24-bit values like the subsequent section.
-        private int[] m_PostPlayerBlock = new int[(16 / SIZEOF_INT32) * 3]; 
+        private int[] m_PostPlayerBlock = new int[(16 / SIZEOF_INT32) * 3];
 
         internal Savegame(IMainFormAPI appAPI, string filename)
         {
@@ -149,12 +163,13 @@ namespace KoaSaveEditor.Savegames
 
                 // Header passed. Now try and read out fields.
                 int offset = s_RequiredHeaderBytes.Length;
-                m_InitialOffset = Read32Bits(ref offset);
+
 
                 // Not sure what this byte is, seems to be always 0. 
-                int unknownByte = Read8Bits(ref offset);
-                RequireByte(unknownByte, 0, offset);
+                int versionByte = Read8Bits(ref offset);
+                RequireByte(versionByte, 0x0A, offset);
 
+                m_InitialOffset = Read32Bits(ref offset);
                 ReadTimePlayed(ref offset);
                 PlayerName = ReadPString32(ref offset);
                 PlayerLocation = ReadPString32(ref offset);
@@ -162,18 +177,40 @@ namespace KoaSaveEditor.Savegames
                 PlayerQuest = ReadPString32(ref offset);
                 PlayerSpecialization = ReadPString32(ref offset);
 
-                // Store for later...
-                m_PostPlayerStringOffset = offset;
                 m_PlayerLevelByte = Read8Bits(ref offset);
-              
+
                 // And then the 48 bytes after that that seem unlike the following section
-                for(int i=0; i< m_PostPlayerBlock.Length;++i)
+                for (int i = 0; i < m_PostPlayerBlock.Length; ++i)
                 {
                     m_PostPlayerBlock[i] = Read32Bits(ref offset);
                 }
 
-                // 
+                // Store for later...
+                m_PostPlayerStringOffset = offset;
+                DebugText = string.Format("Init 0x{0:X} postPlayer=0x{1:X}", m_InitialOffset, m_PostPlayerStringOffset);
 
+                // Find end of this next block.
+                int endOffset = FirstOffsetOf(s_RepeatingPatternBytes, offset);
+                if(endOffset < 0)
+                {
+                    DebugText = "Could not find s_RepeatingPatternBytes";
+                    m_AppAPI.LogLine(string.Format("Error: could not find s_RepeatingPatternBytes starting at offset {0} in file", offset));
+                }
+                else
+                {
+                    // Seem to have a section of 24-bit values here. Ensure that.
+                    int blockCount = (endOffset - offset) / SIZEOF_INT32;
+                    // DebugText = string.Format("0x{0:X} ({0}) to s_RepeatingPatternBytes. Count={1}", endOffset, blockCount);
+                    for (int i=0;i<blockCount;++i)
+                    {
+                        int value = Read32Bits(ref offset);
+                        bool sane = WarnIfIntIsNotWithin(value, 0, 16777216, offset);
+                        if(!sane)
+                        {
+                            break; // No further logging for this file.
+                        }
+                    }
+                }
 
             }
             catch (Exception ex)
@@ -182,6 +219,7 @@ namespace KoaSaveEditor.Savegames
             }
             return bSuccess;
         }
+
 
         /// <summary>
         /// Attempts to read 8 bits.  Adjusts offset to the read position afterwards.
@@ -267,7 +305,7 @@ namespace KoaSaveEditor.Savegames
             string retString = string.Empty;
             // @NMTODO - is there a better/safer/faster way to grab a block of bytes to string?
             // C#'s char is utf16, need to read 
-            for(int i=0;i<stringLen;++i)
+            for (int i = 0; i < stringLen; ++i)
             {
                 int tempInt = Read8Bits(ref offset);
                 char tempChar = (char)(tempInt); // Masking of (& 0xFF) done by Read8Bits
@@ -287,7 +325,7 @@ namespace KoaSaveEditor.Savegames
         /// <param name="offset"></param>
         private void RequireByte(int value, int expectedValue, int offset)
         {
-            Debug.Assert(value == 0);
+            Debug.Assert(value == expectedValue);
             if (value != expectedValue)
             {
                 m_AppAPI.LogLine(string.Format("Invalid byte {0} != expected byte {1} at offset {2}", value, expectedValue, offset - SIZEOF_BYTE));
@@ -297,16 +335,55 @@ namespace KoaSaveEditor.Savegames
 
         /// <summary>
         /// Like RequireByte, but warns if the specified byte is not the expected value
+        /// Returns true if value is expected, false if not.
         /// </summary>
         /// <param name="value"></param>
         /// <param name="expectedValue"></param>
         /// <param name="offset"></param>
-        private void WarnIfByteIsNot(int value, int expectedValue, int offset)
+        private bool WarnIfByteIsNot(int value, int expectedValue, int offset)
         {
             if (value != expectedValue)
             {
-                m_AppAPI.LogLine(string.Format("Warning byte {0} != expected byte {1} at offset {2}. Filename '{3}'", value, expectedValue, offset - SIZEOF_BYTE, m_Filename));
+                m_AppAPI.LogLine(string.Format("Warning byte 0x{0:X) ({0}) != expected byte 0x{1:X}({1}) at offset 0x{2:X} ({2}). Filename '{3}'", value, expectedValue, offset - SIZEOF_BYTE, m_Filename));
+                return false;
             }
+            return true;
+        }
+
+        /// <summary>
+        /// Like RequireByte, but warns if the specified int is not the expected value
+        /// Returns true if value is expected, false if not.
+        /// </summary>
+        /// <param name="value"></param>
+        /// <param name="expectedValue"></param>
+        /// <param name="offset"></param>
+        private bool WarnIfIntIsNot(int value, int expectedValue, int offset)
+        {
+            if (value != expectedValue)
+            {
+                m_AppAPI.LogLine(string.Format("Warning int 0x{0:X) ({0}) != expected int 0x{1:X}({1}) at offset 0x{2:X} ({2}). Filename '{3}'", value, expectedValue, offset - SIZEOF_INT32, m_Filename));
+                return false;
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// Like RequireByte, but warns if the specified int is not in [minValue .. maxValue)
+        /// Returns true if value is expected, false if not.
+        /// </summary>
+        /// <param name="value"></param>
+        /// <param name="expectedValue"></param>
+        /// <param name="offset"></param>
+        private bool WarnIfIntIsNotWithin(int value, int minValue, int maxValue, int offset)
+        {
+            if ((value < minValue) || (value >= maxValue))
+            {
+                m_AppAPI.LogLine(string.Format("Warning int 0x{0:X} ({0}) not within [0x{1:X} ({1}) .. 0x{2:X} ({2})) at offset 0x{3:X} ({3}). Filename '{4}'", 
+                    value, minValue, maxValue, offset - SIZEOF_INT32, Path.GetFileNameWithoutExtension(m_Filename)));
+                return false;
+            }
+
+            return true;
         }
 
         /// <summary>
@@ -325,6 +402,38 @@ namespace KoaSaveEditor.Savegames
                 m_AppAPI.LogLine(string.Format("Invalid byte {0} != expected byte {1} at offset {2}", value, expectedValue, offset - SIZEOF_INT32));
                 throw new InvalidDataException();
             }
+        }
+
+
+        /// <summary>
+        /// Tries to find the first existence of the specified pattern in the file, starting at the given pattern
+        /// Returns < 0 if not found.
+        /// </summary>
+        /// <param name="s_RepeatingPatternBytes"></param>
+        /// <returns></returns>
+        private int FirstOffsetOf(byte[] pattern, int startOffset = 0)
+        {
+            int patternLen = pattern.Length;
+            int overallLen = m_FileBytes.Length;
+            for (int i = startOffset; i < (overallLen - patternLen); ++i)
+            {
+                bool bFound = true; // Until proven otherwise by the j loop
+                for (int j = 0; j < patternLen; ++j)
+                {
+                    if (pattern[j] != m_FileBytes[i + j])
+                    {
+                        bFound = false;
+                        break;
+                    }
+                }
+
+                if (bFound)
+                {
+                    return i;
+                }
+            }
+
+            return -1; // Not found
         }
 
     }

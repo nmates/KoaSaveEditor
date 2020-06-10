@@ -44,6 +44,8 @@
             this.classHeader = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.questHeader = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.saveTimeHeader = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.levelHeader = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.debugHeader = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.mainTabHolder.SuspendLayout();
             this.pickSaveTab.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.mainSplitContainer)).BeginInit();
@@ -124,6 +126,7 @@
             this.outputPane.Multiline = true;
             this.outputPane.Name = "outputPane";
             this.outputPane.ReadOnly = true;
+            this.outputPane.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
             this.outputPane.Size = new System.Drawing.Size(800, 146);
             this.outputPane.TabIndex = 6;
             // 
@@ -159,7 +162,9 @@
             this.charNameHeader,
             this.locationHeader,
             this.classHeader,
-            this.questHeader});
+            this.questHeader,
+            this.levelHeader,
+            this.debugHeader});
             this.savegameListView.HideSelection = false;
             this.savegameListView.Location = new System.Drawing.Point(6, 35);
             this.savegameListView.Name = "savegameListView";
@@ -175,6 +180,7 @@
             // elapsedTimeHeader
             // 
             this.elapsedTimeHeader.Text = "Time played";
+            this.elapsedTimeHeader.Width = 91;
             // 
             // charNameHeader
             // 
@@ -182,19 +188,32 @@
             // 
             // locationHeader
             // 
+            this.locationHeader.DisplayIndex = 5;
             this.locationHeader.Text = "Location";
             // 
             // classHeader
             // 
+            this.classHeader.DisplayIndex = 6;
             this.classHeader.Text = "Class";
             // 
             // questHeader
             // 
+            this.questHeader.DisplayIndex = 7;
             this.questHeader.Text = "Quest";
             // 
             // saveTimeHeader
             // 
             this.saveTimeHeader.Text = "Saved at";
+            // 
+            // levelHeader
+            // 
+            this.levelHeader.DisplayIndex = 4;
+            this.levelHeader.Text = "Level";
+            // 
+            // debugHeader
+            // 
+            this.debugHeader.Text = "Debug";
+            this.debugHeader.Width = 366;
             // 
             // Mainform
             // 
@@ -234,6 +253,8 @@
         private System.Windows.Forms.ColumnHeader locationHeader;
         private System.Windows.Forms.ColumnHeader classHeader;
         private System.Windows.Forms.ColumnHeader questHeader;
+        private System.Windows.Forms.ColumnHeader levelHeader;
+        private System.Windows.Forms.ColumnHeader debugHeader;
     }
 }
 
